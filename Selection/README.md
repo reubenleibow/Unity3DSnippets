@@ -18,3 +18,7 @@ Notes:
 - "Selected_Objects" are object that are selected
 - When wanting to remove game objects, that are in "All_Selectable", call "Destroying_Objects(remove this game object)".
 - "HideButtons()" can be called to hid all buttons
+- "Rock_Selected()" is a method called when a particular object type is selected, this case a rock
+
+Put the script "Button_Click_Script" on an empty gameobject for system code
+- this method is called when a button is clicked
