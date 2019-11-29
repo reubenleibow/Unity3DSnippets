@@ -1,0 +1,44 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Layout_Setup : MonoBehaviour
+{
+	// Start is called before the first frame update
+	public Texture2D Layout_Sprite;
+	public GameObject Wall;
+
+	private User_Script User_Script;
+
+
+	void Start()
+    {
+		User_Script = GetComponent<User_Script>();
+
+		float height = Layout_Sprite.width;
+		float width = Layout_Sprite.height;
+		Vector3 wall_Dimestion = Wall.transform.localScale;
+		Color wall_Type = Color.clear;
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				wall_Type = Layout_Sprite.GetPixel(i,j);
+
+				if(wall_Type == Color.black)
+				{
+					var newItem = Instantiate(Wall, new Vector3(i * wall_Dimestion.x, 0, j * wall_Dimestion.z), Quaternion.identity);
+					User_Script.All_Selectable.Add(newItem);
+				}
+				//Debug.Log(wall_Type);
+			}
+		}
+	}
+
+	// Update is called once per frame
+	void Update()
+    {
+        
+    }
+}
