@@ -1,1 +1,8 @@
 #How to use
+
+Please not that this is from: https://github.com/Unity-Technologies/NavMeshComponents/tree/master/Assets/Examples/Scripts
+
+Put "LocalNavMeshBuilder" on to an empty gameobject. This will convert it to a region that auto updates the pathfinding area.
+Put "NavMeshSourceTag" on to any object that you want to be the obstical, Note: also add to the terrain.
+
+You do not need to bake, or make static or anything.
