@@ -1,0 +1,5 @@
+#ScrollZoomRotateWindow
+
+This cs gives the user the ability to Scroll,Zoom, and Rotate the game screen
+
+"MainCamera" must be the main camera in the scene
