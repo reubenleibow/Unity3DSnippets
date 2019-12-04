@@ -2,4 +2,8 @@
 
 This cs gives the user the ability to Scroll,Zoom, and Rotate the game screen
 
-"MainCamera" must be the main camera in the scene
+There must be a parent gameObject for the camera "ParentObject";
+  "MainCamera" must be the main camera in the scene.
+  
+  
+Currently, the area bounds are set by the Terrain "GameArea".
