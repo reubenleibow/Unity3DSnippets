@@ -9,16 +9,16 @@ public class Screen_Control : MonoBehaviour
 	public Camera MainCamera;
 
 	private float dt;
-	public int ViewPortWidth = 0;
-	public int ViewPortHeight = 0;
+	private int ViewPortWidth = 0;
+	private int ViewPortHeight = 0;
 
-	public float AreaWidth;
-	public float AreaLegnth;
+	private float AreaWidth;
+	private float AreaLegnth;
 	public Terrain GameArea;
 
 	//Scolling Properties
 	private int MouseDistanceFromEdgeOfScreen = 10;
-	public Vector2 CurrentMousePositionInPixels;
+	private Vector2 CurrentMousePositionInPixels;
 	private const int PanningSpeed = 15;
 
 	//Zoom Propperies
@@ -32,9 +32,9 @@ public class Screen_Control : MonoBehaviour
 	private const float ZoomBuffer = 1;
 
 	//Rotation Properties
-	public Vector2 StartMousePos;
-	public Vector3 LastDirection;
-	public bool MiddleMouseButtonDown = false;
+	private Vector2 StartMousePos;
+	private Vector3 LastDirection;
+	private bool MiddleMouseButtonDown = false;
 	private int RotaionSpeed = 200;
 
 	private int MaxVerticalRotation = 80;
