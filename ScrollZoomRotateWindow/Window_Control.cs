@@ -2,84 +2,117 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Window_Control : MonoBehaviour
+public class Screen_Control : MonoBehaviour
 {
-	//Global Values
+	//Main properties
+	public GameObject ParentObject;
 	public Camera MainCamera;
+
+	private float dt;
 	public int ViewPortWidth = 0;
 	public int ViewPortHeight = 0;
-	private float dt;
 
-	//Values used for scolling
-	private int MouseDistanceFromEdgeOfScreen = 1;
+	public float AreaWidth;
+	public float AreaLegnth;
+	public Terrain GameArea;
+
+	//Scolling Properties
+	private int MouseDistanceFromEdgeOfScreen = 10;
 	public Vector2 CurrentMousePositionInPixels;
-	public Vector3 Direction_Up;
 	private const int PanningSpeed = 15;
 
-	//Values used for zooming
+	//Zoom Propperies
 	private float ZoomTargetY = 50;
-	private const int ZoomTransformationSpeed = 10;
+	private const int ZoomTransformationSpeed = 20;
+	//where the zoom should be,set the intensity of a scroll in a mouse
 	private const int ZoomYModifier = 1000;
-	private const int ZoomOutMaxY = 50;
-	private const int ZoomInMinY = 10;
+	private const int ZoomOutMaxY = 80;
+	private const int ZoomInMinY = 5;
+	//Prevents camera flickering as it nears the value
 	private const float ZoomBuffer = 1;
 
-	//Values used for rotating
-	private Vector3 StartMousePos;
-	private Vector3 RotationPoint;
-	private bool MiddleMouseButtonDown = false;
-	private int RotaionSpeed = 20;
-	private int BufferBeforeRotation = 15;
-	private float LastXMoved;
+	//Rotation Properties
+	public Vector2 StartMousePos;
+	public Vector3 LastDirection;
+	public bool MiddleMouseButtonDown = false;
+	private int RotaionSpeed = 200;
 
+	private int MaxVerticalRotation = 80;
+	private int MinVerticalRotation = 10;
+
+
+	// Start is called before the first frame update
 	void Start()
-    {
+	{
 		ViewPortWidth = Camera.main.pixelWidth;
 		ViewPortHeight = Camera.main.pixelHeight;
+
+		AreaWidth = GameArea.terrainData.size.x;
+		AreaLegnth = GameArea.terrainData.size.z;
 	}
 
+	// Update is called once per frame
 	void Update()
-    {
+	{
 		dt = Time.deltaTime;
 
-		ZoomWindow_Update();
-
-		if(!MiddleMouseButtonDown)
+		if (!MiddleMouseButtonDown)
+		{
 			PanningWindow_Update();
+			ZoomWindow_Update();
+		}
 
+		ScrollWithKeys();
 		RotateCamera();
 	}
 
-	//This function handles the panning of the screen.
 	public void PanningWindow_Update()
 	{
-		var DT_PanningSpeed = ((ZoomTargetY - ZoomInMinY) / (ZoomOutMaxY - ZoomInMinY) + 1) * PanningSpeed * dt;
+		var forward = ParentObject.transform.forward;
+		var right = ParentObject.transform.right;
+		var dir_Up = Vector3.Cross(MainCamera.transform.right, Vector3.up);
 
-		//this gets the 3D direction that points up on a 2D vector
-		Direction_Up = Vector3.Cross(MainCamera.transform.right, Vector3.up);
-
-		CurrentMousePositionInPixels = new Vector2(Camera.main.ScreenToViewportPoint(Input.mousePosition).x * ViewPortWidth,
+		CurrentMousePositionInPixels = new Vector2(
+			Camera.main.ScreenToViewportPoint(Input.mousePosition).x * ViewPortWidth,
 			Camera.main.ScreenToViewportPoint(Input.mousePosition).y * ViewPortHeight);
 
 		if (CurrentMousePositionInPixels.x < MouseDistanceFromEdgeOfScreen)
-			MainCamera.transform.Translate(Vector2.right * -DT_PanningSpeed);
+			ParentObject.transform.Translate(right * -PanningSpeed * dt, Space.World);
 
 		if (CurrentMousePositionInPixels.x > ViewPortWidth - MouseDistanceFromEdgeOfScreen)
-			MainCamera.transform.Translate(Vector2.right * DT_PanningSpeed);
-
+			ParentObject.transform.Translate(right * PanningSpeed * dt, Space.World);
 
 		if (CurrentMousePositionInPixels.y < MouseDistanceFromEdgeOfScreen)
-			MainCamera.transform.Translate(Direction_Up * -DT_PanningSpeed, Space.World);
+			ParentObject.transform.Translate(dir_Up * -PanningSpeed * dt, Space.World);
 
 		if (CurrentMousePositionInPixels.y > ViewPortHeight - MouseDistanceFromEdgeOfScreen)
-			MainCamera.transform.Translate(Direction_Up * DT_PanningSpeed, Space.World);
+			ParentObject.transform.Translate(dir_Up * PanningSpeed * dt, Space.World);
+
+		var ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.z > AreaLegnth)
+			ParentObject.transform.position = new Vector3(ParentPosition.x, ParentPosition.y, AreaLegnth);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.z < 0)
+			ParentObject.transform.position = new Vector3(ParentPosition.x, ParentPosition.y, 0);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.x > AreaWidth)
+			ParentObject.transform.position = new Vector3(AreaWidth, ParentPosition.y, ParentPosition.z);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.x < 0)
+			ParentObject.transform.position = new Vector3(0, ParentPosition.y, ParentPosition.z);
 	}
 
-	//This function handles the zooming in and out.
 	public void ZoomWindow_Update()
 	{
-		var CurrentDirectionZoom = Input.GetAxis("Mouse ScrollWheel");
-		var ZoomCurrentY = MainCamera.transform.position.y;
+		var CurrentDirectionZoom = -Input.GetAxis("Mouse ScrollWheel");
+		var ZoomCurrentY = Vector3.Distance(MainCamera.transform.position, ParentObject.transform.position);
 
 		ZoomTargetY += CurrentDirectionZoom * ZoomYModifier * dt;
 
@@ -103,37 +136,74 @@ public class Window_Control : MonoBehaviour
 			MainCamera.transform.Translate(Vector3.forward * zoomDistanceFromTarget * ZoomTransformationSpeed * dt);
 	}
 
-	//This function handles the rotaion of the screen.
 	public void RotateCamera()
 	{
-		var mouseInputPos = Input.mousePosition;
+		var mouseInputPos = Camera.main.ScreenToViewportPoint(Input.mousePosition);
 
 		if (Input.GetMouseButton(2))
 		{
-			if(!MiddleMouseButtonDown)
+			if (!MiddleMouseButtonDown)
 			{
-				if (Physics.Raycast(Camera.main.ScreenPointToRay(mouseInputPos), out RaycastHit hitInfo))
-				{
-						StartMousePos = mouseInputPos;
-						RotationPoint = hitInfo.point;
-				}
-
+				LastDirection = ParentObject.transform.eulerAngles;
+				StartMousePos = mouseInputPos;
 				MiddleMouseButtonDown = true;
 			}
 
 			var MovedMouseDirectionX = mouseInputPos.x - StartMousePos.x;
-			var rotationModifier = (LastXMoved - mouseInputPos.x);
+			var MovedMouseDirectionY = mouseInputPos.y - StartMousePos.y;
 
-			if (MovedMouseDirectionX > BufferBeforeRotation)
-				MainCamera.transform.RotateAround(RotationPoint, Vector3.up, rotationModifier * RotaionSpeed * dt);
+			var RotationVector = LastDirection + new Vector3(-MovedMouseDirectionY * RotaionSpeed, MovedMouseDirectionX * RotaionSpeed, 0);
 
-			if (MovedMouseDirectionX < -BufferBeforeRotation)
-				MainCamera.transform.RotateAround(RotationPoint, Vector3.up, rotationModifier * RotaionSpeed * dt);
+			//set vertical constraints
+			if (RotationVector.x > MaxVerticalRotation)
+				RotationVector.x = MaxVerticalRotation;
+
+			if (RotationVector.x < MinVerticalRotation)
+				RotationVector.x = MinVerticalRotation;
+
+			ParentObject.transform.eulerAngles = RotationVector;
 		}
 		else
 			MiddleMouseButtonDown = false;
 
-		LastXMoved = mouseInputPos.x;
 	}
 
+	public void ScrollWithKeys()
+	{
+		var forward = ParentObject.transform.forward;
+		var right = ParentObject.transform.right;
+		var dir_Up = Vector3.Cross(MainCamera.transform.right, Vector3.up);
+
+		if (Input.GetKey("a"))
+			ParentObject.transform.Translate(right * -PanningSpeed * dt, Space.World);
+
+		if (Input.GetKey("d"))
+			ParentObject.transform.Translate(right * PanningSpeed * dt, Space.World);
+
+		if (Input.GetKey("s"))
+			ParentObject.transform.Translate(dir_Up * -PanningSpeed * dt, Space.World);
+
+		if (Input.GetKey("w"))
+			ParentObject.transform.Translate(dir_Up * PanningSpeed * dt, Space.World);
+
+		var ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.z > AreaLegnth)
+			ParentObject.transform.position = new Vector3(ParentPosition.x, ParentPosition.y, AreaLegnth);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.z < 0)
+			ParentObject.transform.position = new Vector3(ParentPosition.x, ParentPosition.y, 0);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.x > AreaWidth)
+			ParentObject.transform.position = new Vector3(AreaWidth, ParentPosition.y, ParentPosition.z);
+
+		ParentPosition = ParentObject.transform.position;
+
+		if (ParentObject.transform.position.x < 0)
+			ParentObject.transform.position = new Vector3(0, ParentPosition.y, ParentPosition.z);
+	}
 }
