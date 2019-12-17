@@ -1,0 +1,36 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Selection_Attachment : MonoBehaviour
+{
+	public bool DragSelection = true;
+	public bool Selected = false;
+	public bool HasBoundingBox = true;
+
+	public Color Initial;
+	public Color AlternativeColour;
+
+	public ObjectType ObjectType;
+
+	// Start is called before the first frame update
+	void Start()
+    {
+		UnitSelection.All_Selectable.Add(this.gameObject);
+	}
+
+	// Update is called once per frame
+	void Update()
+    {
+		if (Selected)
+		{
+			if (ObjectType == ObjectType.LooseRock)
+				GetComponent<Renderer>().material.color = AlternativeColour;
+		}
+		else
+		{
+			if (ObjectType == ObjectType.LooseRock)
+				GetComponent<Renderer>().material.color = Initial;
+		}
+	}
+}
